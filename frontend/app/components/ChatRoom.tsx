@@ -1,118 +1,67 @@
 "use client";
 
-import { Message } from "@/types";
 import { useEffect, useState, useRef } from "react";
 import io, { Socket } from "socket.io-client";
 
-interface Props {
-  initialRoomId: string;
-  chatHistory: Message[];
+interface Message {
+  id: string;
+  userId: string;
+  username: string;
+  content: string;
+  timestamp: string;
 }
 
-export default function ChatRoom({ initialRoomId, chatHistory }: Props) {
+interface UserInfo {
+  userId: string;
+  username: string;
+  roomId: string;
+}
+
+interface Props {
+  initialRoomId: string;
+}
+
+export default function ChatRoom({ initialRoomId }: Props) {
   const [socket, setSocket] = useState<Socket | null>(null);
-  const [messages, setMessages] = useState<Message[]>(chatHistory);
+  const [messages, setMessages] = useState<Message[]>([]);
   const [users, setUsers] = useState<string[]>([]);
   const [username, setUsername] = useState("");
   const [input, setInput] = useState("");
   const [isJoined, setIsJoined] = useState(false);
-  const [isConnecting, setIsConnecting] = useState(false);
-  const [error, setError] = useState<string | null>(null);
   const [roomId, setRoomId] = useState(initialRoomId);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  // Initialize socket connection
   useEffect(() => {
-    const socketUrl =
-      process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080";
-    const newSocket = io(socketUrl, {
-      transports: ["websocket"],
-      reconnection: true,
-      reconnectionAttempts: 5,
+    const newSocket = io(process.env.NEXT_PUBLIC_API_URL);
+    setSocket(newSocket);
+
+    // Handle received messages
+    newSocket.on("message", (message: Message) => {
+      setMessages((prev) => [...prev, message]);
     });
 
-    setSocket(newSocket);
-    setIsConnecting(true);
+    // Handle message history
+    newSocket.on("messageHistory", (messages: Message[]) => {
+      setMessages(messages);
+    });
+
+    // Handle user join/leave updates
+    newSocket.on(
+      "userJoined",
+      ({ users, roomId: newRoomId }: { users: string[]; roomId: string }) => {
+        setUsers(users);
+        setRoomId(newRoomId);
+      }
+    );
+
+    newSocket.on("userLeft", ({ users }: { users: string[] }) => {
+      setUsers(users);
+    });
 
     return () => {
       newSocket.close();
     };
   }, []);
-
-  useEffect(() => {
-    setMessages(chatHistory);
-  }, [chatHistory]);
-
-  // Handle connection events
-  useEffect(() => {
-    if (!socket) return;
-
-    const onConnect = () => {
-      setIsConnecting(false);
-      setError(null);
-    };
-
-    const onConnectError = (err: Error) => {
-      setIsConnecting(false);
-      setError("Failed to connect to chat server");
-      console.error("Connection error:", err);
-    };
-
-    const onError = (err: Error) => {
-      setError(err.message || "An error occurred");
-    };
-
-    socket.on("connect", onConnect);
-    socket.on("connect_error", onConnectError);
-    socket.on("error", onError);
-
-    return () => {
-      socket.off("connect", onConnect);
-      socket.off("connect_error", onConnectError);
-      socket.off("error", onError);
-    };
-  }, [socket]);
-
-  // Handle chat events
-  useEffect(() => {
-    if (!socket) return;
-
-    const onMessage = (message: Message) => {
-      setMessages((prev) => [...prev, message]);
-    };
-
-    const onUserJoined = ({
-      users,
-      roomId: newRoomId,
-    }: {
-      users: string[];
-      roomId: string;
-    }) => {
-      setUsers(users);
-      setRoomId(newRoomId);
-    };
-
-    const onUserLeft = ({
-      users,
-      roomId: newRoomId,
-    }: {
-      users: string[];
-      roomId: string;
-    }) => {
-      setUsers(users);
-      setRoomId(newRoomId);
-    };
-
-    socket.on("message", onMessage);
-    socket.on("userJoined", onUserJoined);
-    socket.on("userLeft", onUserLeft);
-
-    return () => {
-      socket.off("message", onMessage);
-      socket.off("userJoined", onUserJoined);
-      socket.off("userLeft", onUserLeft);
-    };
-  }, [socket]);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -133,40 +82,6 @@ export default function ChatRoom({ initialRoomId, chatHistory }: Props) {
       setInput("");
     }
   };
-
-  if (error) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="bg-white p-8 rounded-lg shadow-md">
-          <h2 className="text-xl font-bold text-red-600 mb-4">
-            Connection Error
-          </h2>
-          <p className="text-gray-700 mb-4">{error}</p>
-          <button
-            onClick={() => window.location.reload()}
-            className="w-full bg-blue-500 text-white p-3 rounded-md hover:bg-blue-600 transition-colors"
-          >
-            Try Again
-          </button>
-        </div>
-      </div>
-    );
-  }
-
-  if (isConnecting) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="bg-white p-8 rounded-lg shadow-md">
-          <div className="flex items-center space-x-4">
-            <div className="w-8 h-8 border-t-4 border-blue-500 border-solid rounded-full animate-spin"></div>
-            <p className="text-lg text-gray-600">
-              Connecting to chat server...
-            </p>
-          </div>
-        </div>
-      </div>
-    );
-  }
 
   if (!isJoined) {
     return (
@@ -203,7 +118,7 @@ export default function ChatRoom({ initialRoomId, chatHistory }: Props) {
       <div className="w-64 bg-white rounded-lg shadow-md p-4">
         <div className="mb-4">
           <h3 className="text-sm font-medium text-gray-500">Room ID:</h3>
-          <p className="text-gray-800 font-mono break-all">{roomId}</p>
+          <p className="text-gray-800 font-mono">{roomId}</p>
         </div>
         <h3 className="text-lg font-semibold mb-4 text-gray-700">
           Online Users ({users.length})
@@ -224,7 +139,7 @@ export default function ChatRoom({ initialRoomId, chatHistory }: Props) {
           <div className="space-y-4">
             {messages.map((msg) => (
               <div
-                key={msg._id}
+                key={msg.id}
                 className={`max-w-[70%] ${
                   msg.username === username ? "ml-auto" : "mr-auto"
                 }`}
@@ -276,8 +191,7 @@ export default function ChatRoom({ initialRoomId, chatHistory }: Props) {
             />
             <button
               type="submit"
-              disabled={!input.trim()}
-              className="px-6 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"
+              className="px-6 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors"
             >
               Send
             </button>

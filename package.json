@@ -1,0 +1,25 @@
+{
+  "name": "simulation_webchat_ws",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "frontend": "cd frontend && npm run dev",
+    "backend": "cd backend && npm run dev",
+    "dev": "concurrently \"npm run frontend\" \"npm run backend\""
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/khanhlv0175/simulation_webchat_websocket.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/khanhlv0175/simulation_webchat_websocket/issues"
+  },
+  "homepage": "https://github.com/khanhlv0175/simulation_webchat_websocket#readme",
+  "devDependencies": {
+    "concurrently": "^9.2.1"
+  }
+}
