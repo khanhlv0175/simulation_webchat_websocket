@@ -55,5 +55,5 @@ export default function RoomPage() {
     );
   }
 
-  return <ChatRoom initialRoomId={params.roomId} chatHistory={chatHistory} />;
+  return <ChatRoom initialRoomId={roomId} chatHistory={chatHistory} />;
 }

@@ -198,91 +198,124 @@ export default function ChatRoom({ initialRoomId, chatHistory }: Props) {
   }
 
   return (
-    <div className="flex h-screen p-4 gap-4 bg-gray-50">
-      {/* Sidebar */}
-      <div className="w-64 bg-white rounded-lg shadow-md p-4">
-        <div className="mb-4">
-          <h3 className="text-sm font-medium text-gray-500">Room ID:</h3>
-          <p className="text-gray-800 font-mono break-all">{roomId}</p>
-        </div>
-        <h3 className="text-lg font-semibold mb-4 text-gray-700">
-          Online Users ({users.length})
-        </h3>
-        <ul className="space-y-2">
-          {users.map((user, index) => (
-            <li key={index} className="p-2 bg-gray-50 rounded-md text-gray-700">
-              {user}
-            </li>
-          ))}
-        </ul>
-      </div>
+    <div className="flex h-screen bg-gradient-to-br from-blue-50 to-indigo-50">
+      {/* Main Container */}
+      <div className="flex flex-1 m-4 rounded-xl bg-white shadow-2xl overflow-hidden">
+        {/* Sidebar - User List */}
+        <div className="w-72 border-r border-gray-200 bg-white">
+          {/* Room Info Header */}
+          <div className="p-4 border-b border-gray-200">
+            <h2 className="text-xl font-semibold text-gray-800">Room Chat</h2>
+            <div className="flex items-center mt-2 text-sm text-gray-500">
+              <div className="flex items-center">
+                <div className="w-2 h-2 rounded-full bg-green-500 mr-2"></div>
+                <span>{users.length} online</span>
+              </div>
+              <div className="mx-2">•</div>
+              <div className="font-mono text-xs truncate" title={roomId}>
+                ID: {roomId}
+              </div>
+            </div>
+          </div>
 
-      {/* Chat Area */}
-      <div className="flex-1 flex flex-col bg-white rounded-lg shadow-md overflow-hidden">
-        {/* Messages */}
-        <div className="flex-1 p-4 overflow-y-auto">
-          <div className="space-y-4">
-            {messages.map((msg) => (
-              <div
-                key={msg._id}
-                className={`max-w-[70%] ${
-                  msg.username === username ? "ml-auto" : "mr-auto"
-                }`}
-              >
+          {/* Users List */}
+          <div className="p-3">
+            <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">
+              Online Users
+            </h3>
+            <div className="space-y-2">
+              {users.map((user, index) => (
                 <div
-                  className={`rounded-lg p-3 ${
-                    msg.username === username
-                      ? "bg-blue-500 text-white"
-                      : "bg-gray-100 text-gray-800"
+                  key={index}
+                  className="flex items-center p-2 hover:bg-gray-50 rounded-lg transition-colors"
+                >
+                  <div className="w-8 h-8 rounded-full bg-gradient-to-r from-blue-400 to-indigo-400 flex items-center justify-center text-white font-medium">
+                    {user[0]}
+                  </div>
+                  <span className="ml-3 text-gray-700">{user}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* Chat Area */}
+        <div className="flex-1 flex flex-col bg-white">
+          {/* Messages */}
+          <div className="flex-1 p-4 overflow-y-auto bg-gradient-to-b from-gray-50 to-white">
+            <div className="space-y-3 px-2">
+              {messages.map((msg) => (
+                <div
+                  key={msg._id}
+                  className={`flex ${
+                    msg.username === username ? "justify-end" : "justify-start"
                   }`}
                 >
-                  <div className="flex justify-between text-sm mb-1">
-                    <span
-                      className={
+                  {/* Message Container */}
+                  <div
+                    className={`max-w-[80%] flex ${
+                      msg.username === username
+                        ? "flex-row-reverse"
+                        : "flex-row"
+                    } items-end group`}
+                  >
+                    {/* Avatar */}
+                    <div className="w-6 h-6 rounded-full bg-gradient-to-r from-blue-400 to-indigo-400 flex-shrink-0 flex items-center justify-center text-white text-xs">
+                      {msg.username[0]}
+                    </div>
+
+                    {/* Message Content */}
+                    <div
+                      className={`mx-2 ${
                         msg.username === username
-                          ? "text-blue-100"
-                          : "text-gray-600"
-                      }
+                          ? "bg-gradient-to-r from-blue-500 to-indigo-500 text-white"
+                          : "bg-gray-100 text-gray-800"
+                      } px-4 py-2 rounded-2xl shadow-sm`}
                     >
-                      {msg.username}
-                    </span>
-                    <span
-                      className={
-                        msg.username === username
-                          ? "text-blue-100"
-                          : "text-gray-600"
-                      }
-                    >
-                      {new Date(msg.timestamp).toLocaleTimeString()}
-                    </span>
+                      <p className="text-sm mb-1">{msg.content}</p>
+                      <div
+                        className={`text-xs ${
+                          msg.username === username
+                            ? "text-blue-100"
+                            : "text-gray-500"
+                        } opacity-0 group-hover:opacity-100 transition-opacity`}
+                      >
+                        {msg.username} •{" "}
+                        {new Date(msg.timestamp).toLocaleTimeString([], {
+                          hour: "2-digit",
+                          minute: "2-digit",
+                        })}
+                      </div>
+                    </div>
                   </div>
-                  <p>{msg.content}</p>
                 </div>
+              ))}
+              <div ref={messagesEndRef} />
+            </div>
+          </div>
+
+          {/* Input Area */}
+          <div className="p-4 bg-white border-t border-gray-200">
+            <form onSubmit={handleSubmit} className="flex items-center gap-3">
+              <div className="flex-1 relative">
+                <input
+                  type="text"
+                  value={input}
+                  onChange={(e) => setInput(e.target.value)}
+                  placeholder="Type a message..."
+                  className="w-full pl-4 pr-12 py-3 rounded-full border border-gray-300 focus:outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100 transition-all"
+                />
               </div>
-            ))}
-            <div ref={messagesEndRef} />
+              <button
+                type="submit"
+                disabled={!input.trim()}
+                className="px-6 py-3 bg-gradient-to-r from-blue-500 to-indigo-500 text-white rounded-full font-medium hover:from-blue-600 hover:to-indigo-600 focus:outline-none focus:ring-2 focus:ring-blue-300 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:from-blue-500 disabled:hover:to-indigo-500 transition-all shadow-md hover:shadow-lg"
+              >
+                Send
+              </button>
+            </form>
           </div>
         </div>
-
-        {/* Input Area */}
-        <form onSubmit={handleSubmit} className="p-4 border-t border-gray-200">
-          <div className="flex gap-2">
-            <input
-              type="text"
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              placeholder="Type a message..."
-              className="flex-1 p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-            <button
-              type="submit"
-              disabled={!input.trim()}
-              className="px-6 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"
-            >
-              Send
-            </button>
-          </div>
-        </form>
       </div>
     </div>
   );
