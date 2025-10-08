@@ -23,5 +23,11 @@
   "homepage": "https://github.com/khanhlv0175/simulation_webchat_websocket#readme",
   "devDependencies": {
     "concurrently": "^9.2.1"
+  },
+  "dependencies": {
+    "@hookform/resolvers": "^5.2.2",
+    "react-hook-form": "^7.64.0",
+    "swr": "^2.3.6",
+    "zod": "^4.1.12"
   }
 }
