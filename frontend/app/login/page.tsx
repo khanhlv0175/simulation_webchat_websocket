@@ -7,6 +7,7 @@ import { Label } from '@/components/ui/label';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { useAuthStore } from '@/stores/useAuthStore';
 
 const loginSchema = z.object({
 	username: z.string().min(3, 'Username must be at least 3 characters'),
@@ -17,6 +18,7 @@ type LoginFormData = z.infer<typeof loginSchema>;
 
 export default function LoginPage() {
 	const router = useRouter();
+	const { user, setUser } = useAuthStore((state) => ({ user: state.user, setUser: state.setUser }));
 	const {
 		register,
 		handleSubmit,
@@ -26,10 +28,24 @@ export default function LoginPage() {
 		mode: 'onBlur',
 	});
 
+	if (user) router.push('/');
+
 	const onSubmit = async (data: LoginFormData) => {
 		try {
-			// TODO: Implement actual login logic here
-			localStorage.setItem('username', data.username);
+			const response = await fetch('/api/login', {
+				method: 'POST',
+				headers: {
+					'Content-Type': 'application/json',
+				},
+				body: JSON.stringify(data),
+			});
+
+			if (!response.ok) {
+				throw new Error('Login failed');
+			}
+
+			const userData = await response.json();
+			setUser(userData);
 			router.push('/');
 		} catch (error) {
 			console.error('Login failed:', error);
