@@ -6,6 +6,7 @@ import mongoose from "mongoose";
 import dotenv from "dotenv";
 import Message from "./models/Message";
 import ChatRoom from "./models/ChatRoom";
+import authRoutes from "./routes/auth";
 
 // Load environment variables
 dotenv.config();
@@ -197,3 +198,5 @@ const PORT = process.env.PORT || 8080;
 httpServer.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
 });
+
+app.use("/api", authRoutes);

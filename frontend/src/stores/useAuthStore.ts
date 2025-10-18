@@ -1,17 +1,16 @@
+'use client';
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 
-type Role = 'admin' | 'manager' | 'viewer';
-
-interface UserInfo {
+interface User {
 	name: string;
-	role: Role;
+	role: 'admin' | 'manager' | 'viewer';
 }
 
 interface AuthStore {
-	user: UserInfo | null;
+	user: User | null;
 	isAuthenticated: boolean;
-	setUser: (user: UserInfo | null) => void;
+	setUser: (user: User | null) => void;
 	logout: () => void;
 }
 

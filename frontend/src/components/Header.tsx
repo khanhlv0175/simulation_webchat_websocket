@@ -1,4 +1,6 @@
 'use client';
+
+import { useEffect } from 'react';
 import { useAuthStore } from '@/stores/useAuthStore';
 import Link from 'next/link';
 import {
@@ -9,10 +11,44 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import { ThemeToggle } from './ToggleTheme';
+import fetcher from '@/lib/fetcher';
+import { useRouter } from 'next/navigation';
+import { ROUTES } from '@/lib/routes';
+
+interface UserInfo {
+	name: string;
+	role: 'admin' | 'manager' | 'viewer';
+}
 
 export function Header() {
-	const { user, isAuthenticated, logout } = useAuthStore();
+	const router = useRouter();
+	const { user, isAuthenticated, setUser, logout } = useAuthStore();
+
+	useEffect(() => {
+		const fetchUserInfo = async () => {
+			try {
+				// Only fetch if we have a token but no user info
+				if (!user && localStorage.getItem('token')) {
+					const userInfo = await fetcher<UserInfo>('/api/me/information');
+					setUser(userInfo);
+				}
+			} catch (error) {
+				console.error('Failed to fetch user info:', error);
+				// If API call fails, clear auth state and redirect to login
+				localStorage.removeItem('token');
+				logout();
+				router.push(ROUTES.LOGIN);
+			}
+		};
+
+		fetchUserInfo();
+	}, [user, setUser, logout, router]);
+
+	const handleLogout = () => {
+		localStorage.removeItem('token');
+		logout();
+		router.push(ROUTES.LOGIN);
+	};
 
 	return (
 		<header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -29,8 +65,8 @@ export function Header() {
 
 						{user?.role === 'admin' && <Link href="/create-account">Create Account</Link>}
 					</nav>
-					{/* <ThemeToggle /> */}
-					{isAuthenticated ? (
+
+					{isAuthenticated && user ? (
 						<DropdownMenu>
 							<DropdownMenuTrigger asChild>
 								<Button variant="ghost" className="relative h-8 w-8 rounded-full">
@@ -42,7 +78,7 @@ export function Header() {
 							<DropdownMenuContent align="end">
 								<DropdownMenuItem className="font-normal">{user.name}</DropdownMenuItem>
 								<DropdownMenuItem className="text-muted-foreground">{user.role}</DropdownMenuItem>
-								<DropdownMenuItem onClick={logout}>Log out</DropdownMenuItem>
+								<DropdownMenuItem onClick={handleLogout}>Log out</DropdownMenuItem>
 							</DropdownMenuContent>
 						</DropdownMenu>
 					) : (

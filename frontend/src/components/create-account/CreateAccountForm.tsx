@@ -153,7 +153,7 @@ export function CreateAccountForm() {
 	};
 
 	return (
-		<form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+		<form onSubmit={handleSubmit(onSubmit)} className="space-y-6" autoComplete="off">
 			<div className="space-y-2">
 				<Label htmlFor="name">Name</Label>
 				<Input id="name" {...register('name')} placeholder="Enter name" />
@@ -162,12 +162,7 @@ export function CreateAccountForm() {
 
 			<div className="space-y-2">
 				<Label htmlFor="username">Username</Label>
-				<Input
-					id="username"
-					autoComplete="create-new-username"
-					{...register('username')}
-					placeholder="Enter username"
-				/>
+				<Input autoComplete="new-user" {...register('username')} placeholder="Enter username" />
 				{errors.username && <p className="text-sm text-red-500">{errors.username.message}</p>}
 			</div>
 
@@ -175,13 +170,21 @@ export function CreateAccountForm() {
 				<Label htmlFor="password">Password</Label>
 				<InputGroup>
 					<InputGroupInput
-						id="password"
-						placeholder="Enter password"
 						type="password"
-						autoComplete="create-new-password"
+						placeholder="Enter password"
+						autoComplete="new-password"
 						{...register('password')}
 					/>
 				</InputGroup>
+				{/* <Input type="text" className="hidden" /> */}
+				{/* <Input
+					id="password"
+					type="password"
+					autoComplete="new-password"
+					{...register('password')}
+					placeholder="Enter your password"
+					className="h-12 hidden"
+				/> */}
 				{errors.password && <p className="text-sm text-red-500">{errors.password.message}</p>}
 			</div>
 
