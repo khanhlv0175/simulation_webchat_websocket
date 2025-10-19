@@ -6,7 +6,22 @@ export interface IUser extends Document {
   username: string;
   password: string;
   role: "admin" | "manager" | "viewer";
+  locations?: {
+    level1?: string;
+    level2?: string;
+    level3?: string;
+    level4?: string;
+    level5?: string;
+  };
   comparePassword(candidatePassword: string): Promise<boolean>;
+}
+
+interface Location {
+  level1: string;
+  level2: string;
+  level3: string;
+  level4: string;
+  level5: string;
 }
 
 const UserSchema = new Schema<IUser>({
@@ -17,6 +32,13 @@ const UserSchema = new Schema<IUser>({
     type: String,
     required: true,
     enum: ["admin", "manager", "viewer"],
+  },
+  locations: {
+    level1: String,
+    level2: String,
+    level3: String,
+    level4: String,
+    level5: String,
   },
 });
 

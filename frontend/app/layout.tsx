@@ -3,6 +3,7 @@ import { Noto_Sans } from 'next/font/google';
 import './globals.css';
 import { Header } from '@/components/Header';
 import { ThemeProvider } from '@/components/theme-provider';
+import { Toaster } from '@/components/ui/sonner';
 
 const notoSans = Noto_Sans({
 	variable: '--font-noto-sans',
@@ -22,9 +23,10 @@ export default function RootLayout({
 	return (
 		<html lang="en">
 			<body className={notoSans.className}>
-				<ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
+				<ThemeProvider attribute="class" defaultTheme="light" enableSystem disableTransitionOnChange>
 					<Header />
 					{children}
+					<Toaster />
 				</ThemeProvider>
 			</body>
 		</html>

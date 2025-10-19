@@ -1,6 +1,6 @@
 'use client';
 
-import { useForm } from 'react-hook-form';
+import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Button } from '@/components/ui/button';
@@ -8,21 +8,35 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useEffect, useState } from 'react';
-import useSWR from 'swr';
+import useSWR, { useSWRConfig } from 'swr';
 import { InputGroup, InputGroupInput } from '../ui/input-group';
+import fetcher from '@/lib/fetcher';
+import { toast } from 'sonner';
 
 const roleOptions = ['admin', 'manager', 'viewer'] as const;
+
+interface LocationRow {
+	level1: string;
+	level2: string;
+	level3: string;
+	level4: string;
+	level5: string;
+}
 
 const createAccountSchema = z.object({
 	name: z.string().min(3, 'Name must be at least 3 characters'),
 	username: z.string().min(3, 'Username must be at least 3 characters'),
 	password: z.string().min(6, 'Password must be at least 6 characters'),
-	role: z.enum(roleOptions),
-	locationLevel1: z.string(),
-	locationLevel2: z.string(),
-	locationLevel3: z.string(),
-	locationLevel4: z.string(),
-	locationLevel5: z.string(),
+	role: z.string(),
+	locations: z.array(
+		z.object({
+			level1: z.string(),
+			level2: z.string(),
+			level3: z.string(),
+			level4: z.string(),
+			level5: z.string(),
+		}),
+	),
 });
 
 type CreateAccountFormData = z.infer<typeof createAccountSchema>;
@@ -39,8 +53,6 @@ interface LocationLevel {
 	dependsOn?: number;
 }
 
-const fetcher = (url: string) => fetch(url).then((res) => res.json());
-
 const locationLevels: LocationLevel[] = [
 	{ level: 1, label: 'Location Level 1' },
 	{ level: 2, label: 'Location Level 2', dependsOn: 1 },
@@ -50,104 +62,113 @@ const locationLevels: LocationLevel[] = [
 ];
 
 export function CreateAccountForm() {
+	const { mutate } = useSWRConfig();
 	const {
 		register,
 		handleSubmit,
+		control,
 		watch,
 		setValue,
+		reset,
 		formState: { errors, isSubmitting },
 	} = useForm<CreateAccountFormData>({
 		resolver: zodResolver(createAccountSchema),
+		defaultValues: {
+			name: '',
+			username: '',
+			password: '',
+			role: '',
+			locations: [{ level1: '', level2: '', level3: '', level4: '', level5: '' }],
+		},
 	});
 
-	const [selectedLocations, setSelectedLocations] = useState({
-		level1: '',
-		level2: '',
-		level3: '',
-		level4: '',
-		level5: '',
-	});
+	const [locationRows, setLocationRows] = useState<LocationRow[]>([
+		{ level1: '', level2: '', level3: '', level4: '', level5: '' },
+	]);
 
-	// Fetch locations for each level
-	const locationQueries = locationLevels.map((level) => {
-		const shouldFetch = level.dependsOn
-			? selectedLocations[`level${level.dependsOn}` as keyof typeof selectedLocations]
-			: true;
+	const handleAddLocationRow = () => {
+		setLocationRows([...locationRows, { level1: '', level2: '', level3: '', level4: '', level5: '' }]);
+		const currentLocations = watch('locations') || [];
+		setValue('locations', [...currentLocations, { level1: '', level2: '', level3: '', level4: '', level5: '' }]);
+	};
 
-		const url = shouldFetch
-			? `/api/list-locations?level=${level.level}${
-					level.dependsOn
-						? `&parentId=${selectedLocations[`level${level.dependsOn}` as keyof typeof selectedLocations]}`
-						: ''
-				}`
-			: null;
+	const handleLocationChange = (rowIndex: number, level: number, value: string) => {
+		const newLocationRows = [...locationRows];
+		const row = { ...newLocationRows[rowIndex] };
+		row[`level${level}` as keyof LocationRow] = value;
 
-		return useSWR<{ locations: Location[] }>(url, fetcher);
-	});
-
-	const handleLocationChange = (level: number, value: string) => {
-		const newSelectedLocations = { ...selectedLocations };
-		newSelectedLocations[`level${level}` as keyof typeof selectedLocations] = value;
-
-		// Reset lower levels when a higher level changes
+		// Reset lower levels in this row
 		for (let i = level + 1; i <= 5; i++) {
-			newSelectedLocations[`level${i}` as keyof typeof selectedLocations] = '';
-			setValue(`locationLevel${i}`, '');
+			row[`level${i}` as keyof LocationRow] = '';
 		}
 
-		setSelectedLocations(newSelectedLocations);
-		setValue(`locationLevel${level}`, value);
+		newLocationRows[rowIndex] = row;
+		setLocationRows(newLocationRows);
+
+		// Update form values
+		const locations = watch('locations');
+		locations[rowIndex] = row;
+		setValue('locations', locations);
 	};
 
 	const onSubmit = async (data: CreateAccountFormData) => {
 		try {
-			const response = await fetch('/api/create-account', {
+			// toast('Account created successfully');
+
+			await fetcher('/api/register', {
 				method: 'POST',
-				headers: {
-					'Content-Type': 'application/json',
-				},
 				body: JSON.stringify(data),
 			});
 
-			if (!response.ok) {
-				throw new Error('Failed to create account');
-			}
+			toast.success('Account created successfully');
 
-			// Handle success
+			// Reset form
+			// form.reset();
+			reset();
+
+			// Clear all selected locations
+			setLocationRows([{ level1: '', level2: '', level3: '', level4: '', level5: '' }]);
+
+			// Revalidate any user lists if they exist
+			mutate((key) => typeof key === 'string' && key.startsWith('/api/users'));
 		} catch (error) {
 			console.error('Error creating account:', error);
+			toast.error(error instanceof Error ? error.message : 'Failed to create account');
 		}
 	};
 
 	// Replace individual location renders with dynamic rendering
-	const renderLocationSelects = () => {
-		return locationLevels.map((level, index) => {
-			const { data, error } = locationQueries[index];
-			const showSelect = level.dependsOn
-				? selectedLocations[`level${level.dependsOn}` as keyof typeof selectedLocations]
-				: true;
+	const renderLocationRow = (rowIndex: number) => {
+		return locationLevels.map((level, levelIndex) => {
+			const parentLevel = level.dependsOn;
+			const parentValue = parentLevel ? locationRows[rowIndex][`level${parentLevel}` as keyof LocationRow] : null;
 
-			if (!showSelect || !data?.locations?.length) return null;
+			const shouldShow = !parentLevel || parentValue;
+
+			const { data } = useSWR<{ locations: Location[] }>(
+				shouldShow ? `/api/list-locations?level=${level.level}${parentValue ? `&parentId=${parentValue}` : ''}` : null,
+				fetcher,
+			);
+
+			if (!shouldShow || !data?.locations?.length) return null;
 
 			return (
-				<div key={level.level} className="space-y-2">
-					<Label>{level.label}</Label>
-					<Select
-						onValueChange={(value) => handleLocationChange(level.level, value)}
-						value={selectedLocations[`level${level.level}` as keyof typeof selectedLocations]}
-					>
-						<SelectTrigger>
-							<SelectValue placeholder="Select location" />
-						</SelectTrigger>
-						<SelectContent>
-							{data.locations.map((location) => (
-								<SelectItem key={location.id} value={location.id}>
-									{location.name}
-								</SelectItem>
-							))}
-						</SelectContent>
-					</Select>
-				</div>
+				<Select
+					key={`${rowIndex}-${level.level}`}
+					value={locationRows[rowIndex][`level${level.level}` as keyof LocationRow]}
+					onValueChange={(value) => handleLocationChange(rowIndex, level.level, value)}
+				>
+					<SelectTrigger className="w-full">
+						<SelectValue placeholder={`Select ${level.label}`} />
+					</SelectTrigger>
+					<SelectContent>
+						{data.locations.map((location) => (
+							<SelectItem key={location.id} value={location.id}>
+								{location.name}
+							</SelectItem>
+						))}
+					</SelectContent>
+				</Select>
 			);
 		});
 	};
@@ -190,23 +211,41 @@ export function CreateAccountForm() {
 
 			<div className="space-y-2">
 				<Label htmlFor="role">Role</Label>
-				<Select onValueChange={(value) => setValue('role', value as CreateAccountFormData['role'])}>
-					<SelectTrigger>
-						<SelectValue placeholder="Select role" />
-					</SelectTrigger>
-					<SelectContent>
-						{roleOptions.map((role) => (
-							<SelectItem key={role} value={role}>
-								{role.charAt(0).toUpperCase() + role.slice(1)}
-							</SelectItem>
-						))}
-					</SelectContent>
-				</Select>
+				<Controller
+					control={control}
+					name="role"
+					render={({ field }) => (
+						<Select {...field} onValueChange={field.onChange}>
+							<SelectTrigger>
+								<SelectValue placeholder="Select role" />
+							</SelectTrigger>
+							<SelectContent>
+								{roleOptions.map((role) => (
+									<SelectItem key={role} value={role}>
+										{role.charAt(0).toUpperCase() + role.slice(1)}
+									</SelectItem>
+								))}
+							</SelectContent>
+						</Select>
+					)}
+				/>
 				{errors.role && <p className="text-sm text-red-500">{errors.role.message}</p>}
 			</div>
 
-			{/* Replace all location select elements with dynamic rendering */}
-			{renderLocationSelects()}
+			<div className="space-y-4">
+				<div className="flex items-center justify-between">
+					<Label>Locations</Label>
+					<Button type="button" variant="outline" size="sm" onClick={handleAddLocationRow}>
+						Add Location
+					</Button>
+				</div>
+
+				{locationRows.map((_, index) => (
+					<div key={index} className="grid grid-cols-5 gap-2.5">
+						{renderLocationRow(index)}
+					</div>
+				))}
+			</div>
 
 			<Button type="submit" className="w-full" disabled={isSubmitting}>
 				{isSubmitting ? 'Creating...' : 'Create Account'}
