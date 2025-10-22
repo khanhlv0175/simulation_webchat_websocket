@@ -1,19 +1,19 @@
 'use client';
 
-import { useEffect } from 'react';
-import { useAuthStore } from '@/stores/useAuthStore';
-import Link from 'next/link';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { Button } from '@/components/ui/button';
 import {
 	DropdownMenu,
 	DropdownMenuContent,
 	DropdownMenuItem,
 	DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { Button } from '@/components/ui/button';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import fetcher from '@/lib/fetcher';
-import { useRouter } from 'next/navigation';
 import { ROUTES } from '@/lib/routes';
+import { useAuthStore } from '@/stores/useAuthStore';
+import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import { useEffect } from 'react';
 
 interface UserInfo {
 	name: string;
@@ -59,8 +59,8 @@ export function Header() {
 
 				<div className="flex flex-1 items-center justify-end gap-3">
 					<nav className="flex items-center space-x-6 text-sm font-medium">
-						<Link href="/">Home</Link>
-
+						{/* <Link href="/">Home</Link> */}
+						<Link href="/locations">Locations</Link>
 						{(user?.role === 'admin' || user?.role === 'manager') && <Link href="/manage">Manage</Link>}
 
 						{user?.role === 'admin' && <Link href="/create-account">Create Account</Link>}

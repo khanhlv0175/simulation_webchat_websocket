@@ -7,7 +7,7 @@ import dotenv from "dotenv";
 import Message from "./models/Message";
 import ChatRoom from "./models/ChatRoom";
 import authRoutes from "./routes/auth";
-import locationsRoutes from "./routes/locations";
+import locationRoutes from "./routes/locations";
 
 // Load environment variables
 dotenv.config();
@@ -201,4 +201,4 @@ httpServer.listen(PORT, () => {
 });
 
 app.use("/api", authRoutes);
-app.use("/api", locationsRoutes);
+app.use("/api", locationRoutes);

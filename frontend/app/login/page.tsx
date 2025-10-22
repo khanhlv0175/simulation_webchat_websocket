@@ -1,15 +1,16 @@
 'use client';
 
-import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { InputGroup, InputGroupInput } from '@/components/ui/input-group';
 import { Label } from '@/components/ui/label';
+import fetcher from '@/lib/fetcher';
+import { ROUTES } from '@/lib/routes';
+import { useAuthStore } from '@/stores/useAuthStore';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { useAuthStore } from '@/stores/useAuthStore';
-import { ROUTES } from '@/lib/routes';
-import fetcher from '@/lib/fetcher';
 
 const loginSchema = z.object({
 	username: z.string().min(3, 'Username must be at least 3 characters'),
@@ -73,20 +74,30 @@ export default function LoginPage() {
 				<form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
 					<div className="space-y-2">
 						<Label htmlFor="username">Username</Label>
-						<Input type="text" {...register('username')} placeholder="Username" className="h-12" autoFocus />
+						<Input
+							id="username"
+							type="text"
+							{...register('username')}
+							placeholder="Username"
+							className="h-12"
+							autoFocus
+						/>
 						{errors.username && <p className="text-sm text-red-500 mt-1">{errors.username.message}</p>}
 					</div>
 
 					<div className="space-y-2">
 						<Label htmlFor="password">Password</Label>
-						<Input
-							type="password"
-							autoComplete="new-password"
-							{...register('password')}
-							placeholder="Password"
-							className="h-12"
-						/>
-						<Input type="text" className="hidden" />
+						<InputGroup>
+							<InputGroupInput
+								id="password"
+								type="password"
+								placeholder="Password"
+								autoComplete="new-password"
+								{...register('password')}
+								className="h-12"
+							/>
+						</InputGroup>
+
 						{errors.password && <p className="text-sm text-red-500 mt-1">{errors.password.message}</p>}
 					</div>
 					{errors.root && <p className="text-sm text-red-500 text-center">{errors.root.message}</p>}

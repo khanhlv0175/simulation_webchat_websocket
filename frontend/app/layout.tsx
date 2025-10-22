@@ -1,9 +1,9 @@
-import type { Metadata } from 'next';
-import { Noto_Sans } from 'next/font/google';
-import './globals.css';
 import { Header } from '@/components/Header';
 import { ThemeProvider } from '@/components/theme-provider';
 import { Toaster } from '@/components/ui/sonner';
+import type { Metadata } from 'next';
+import { Noto_Sans } from 'next/font/google';
+import './globals.css';
 
 const notoSans = Noto_Sans({
 	variable: '--font-noto-sans',
@@ -26,7 +26,7 @@ export default function RootLayout({
 				<ThemeProvider attribute="class" defaultTheme="light" enableSystem disableTransitionOnChange>
 					<Header />
 					{children}
-					<Toaster />
+					<Toaster duration={5000} position="top-center" richColors />
 				</ThemeProvider>
 			</body>
 		</html>

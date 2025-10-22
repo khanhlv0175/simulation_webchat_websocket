@@ -1,5 +1,6 @@
+import jwt from "jsonwebtoken";
 import express from "express";
-import { auth } from "../middleware/auth";
+import { auth, AuthRequest } from "../middleware/auth";
 import User from "../models/User";
 import bcrypt from "bcryptjs";
 
