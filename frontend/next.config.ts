@@ -10,15 +10,15 @@ const nextConfig: NextConfig = {
 			},
 		],
 	},
-	redirects: async () => {
-		return [
-			{
-				source: '/',
-				destination: '/locations',
-				permanent: true,
-			},
-		];
-	},
+	// redirects: async () => {
+	// 	return [
+	// 		{
+	// 			source: '/',
+	// 			destination: '/locations',
+	// 			permanent: true,
+	// 		},
+	// 	];
+	// },
 };
 
 const withNextIntl = createNextIntlPlugin();
