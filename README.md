@@ -28,6 +28,7 @@ A modern real-time chat application built with Next.js, Node.js, and MongoDB.
 - Node.js 18+
 - MongoDB 4.4+
 - npm or yarn
+- (Optional) Docker 24+ và Docker Compose Plugin
 
 ## Installation
 
@@ -79,6 +80,40 @@ npm run frontend
 # Backend (localhost:8080)
 npm run backend
 ```
+
+### Docker
+
+Nếu bạn muốn chạy toàn bộ hệ thống thông qua Docker, hãy làm theo các bước sau:
+
+1. **Cài đặt Docker Desktop hoặc Docker Engine** (bao gồm Docker Compose). Tham khảo hướng dẫn chính thức:
+   - Windows & macOS: [https://docs.docker.com/get-docker/](https://docs.docker.com/get-docker/)
+   - Ubuntu/Debian: [https://docs.docker.com/engine/install/](https://docs.docker.com/engine/install/)
+   - Kiểm tra lại bằng `docker --version` và `docker compose version`.
+
+2. **Chọn chế độ chạy**:
+
+   - Production (mặc định, build tối ưu, không hot reload):
+
+     ```bash
+     docker compose up -d
+     ```
+
+   - Development (hot reload qua `npm run dev`):
+
+     ```bash
+     docker compose --profile dev up
+     ```
+
+     Lần chạy đầu có thể lâu hơn vì container sẽ cài đặt dependencies và lưu vào volume `backend_node_modules` / `frontend_node_modules`.
+
+   Bạn có thể tạo file `.env` ở thư mục gốc nếu muốn tùy chỉnh cấu hình (xem `DOCKER.md`).
+
+3. **Quản lý vòng đời containers**:
+   - Xem log: `docker compose logs -f`
+   - Dừng: `docker compose down`
+   - Dừng và xóa volumes (xóa dữ liệu MongoDB): `docker compose down -v`
+
+Xem thêm phần chi tiết, biến môi trường và hướng dẫn xử lý sự cố trong tài liệu `DOCKER.md` ở thư mục gốc của dự án.
 
 ### Database
 

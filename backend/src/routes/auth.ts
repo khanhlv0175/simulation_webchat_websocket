@@ -53,7 +53,7 @@ router.get("/me/information", auth, async (req: AuthRequest, res) => {
 });
 
 // Register endpoint
-router.post("/register", auth, async (req, res) => {
+router.post("/register", auth, async (req: AuthRequest, res) => {
   try {
     const { name, username, password, role, locations } = req.body;
 
@@ -63,7 +63,7 @@ router.post("/register", auth, async (req, res) => {
     }
 
     // Only admin can create new users
-    if (req.user.role !== "admin") {
+    if (!req.user || req.user.role !== "admin") {
       return res.status(403).json({ error: "Only admin can create new users" });
     }
 

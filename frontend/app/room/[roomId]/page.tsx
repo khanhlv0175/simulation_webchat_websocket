@@ -7,15 +7,24 @@ import { useParams } from "next/navigation";
 
 export default function RoomPage() {
   const params = useParams();
-  const roomId = params.roomId;
+  const roomIdParam = params.roomId;
+  // Ensure roomId is a string
+  const roomId = Array.isArray(roomIdParam) ? roomIdParam[0] : roomIdParam || "";
   const [isValidRoom, setIsValidRoom] = useState(true);
   const [chatHistory, setChatHistory] = useState<Message[]>([]);
+  
   useEffect(() => {
+    // If roomId is invalid, mark as invalid
+    if (!roomId) {
+      setIsValidRoom(false);
+      return;
+    }
+
     // Verify if the room exists
     const checkRoom = async () => {
       try {
         const response = await fetch(
-          `${process.env.NEXT_PUBLIC_API_URL}/api/rooms/${roomId}`
+          `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080'}/api/rooms/${roomId}`
         );
         if (!response.ok) {
           setIsValidRoom(false);
@@ -34,7 +43,7 @@ export default function RoomPage() {
     checkRoom();
   }, [roomId]);
 
-  if (!isValidRoom) {
+  if (!isValidRoom || !roomId) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <div className="bg-white p-8 rounded-lg shadow-md">
